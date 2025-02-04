@@ -1,5 +1,6 @@
 package com.example.rest_tdd;
 
+import com.example.rest_tdd.domain.member.member.controller.ApiV1MemberController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,33 +10,33 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-//서버를 띄우지 않아도 스프링이 내부적으로 네트워크에서 실행한 것처럼 작동
 @AutoConfigureMockMvc
-//DB 작업을 해도 테스트 환경에서는 원래대로 돌아가게 함
 @Transactional
-class AuthApplicationTests {
+class RestTddApplicationTests {
 
 	@Autowired
 	private MockMvc mvc;
-
-
 	@Test
-	@DisplayName("회원가입")
+	@DisplayName("회원 가입")
 	void join() throws Exception {
 		ResultActions resultActions = mvc
 				.perform(
-						post("/api/v1/member/join")
+						post("/api/v1/members/join")
 				)
 				.andDo(print());
 		resultActions
-				.andExpect(status().isCreated());
+				.andExpect(status().isCreated())
+				.andExpect(handler().handlerType(ApiV1MemberController.class))
+				.andExpect(handler().methodName("join"))
+				//jsonPath = 결과 body에 json 데이터가 있으면 값은~
+				.andExpect(jsonPath("$.code").value("201-1"))
+				.andExpect(jsonPath("$.msg").value("회원 가입이 완료되었습니다."));
 	}
 
 }
