@@ -10,9 +10,7 @@ import java.time.LocalDateTime;
 public class MemberDto {
 
     private long id;
-    @JsonProperty("createdDatetime")
     private LocalDateTime createdDate;
-    @JsonProperty("modifiedDatetime")
     private LocalDateTime modifiedDate;
     private String nickname;
 
