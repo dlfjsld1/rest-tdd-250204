@@ -110,7 +110,7 @@ public class ApiV1PostControllerTest {
 
     @Test
     @DisplayName("글 작성")
-    void item3() throws Exception {
+    void write1() throws Exception {
 
         String apiKey = "user1";
         String title = "새로운 글 제목";
@@ -128,6 +128,24 @@ public class ApiV1PostControllerTest {
                 .andExpect(jsonPath("$.msg").value("%d번 글 작성이 완료되었습니다.".formatted(post.getId())));
 
         checkPost(resultActions, post);
+    }
+
+    @Test
+    @DisplayName("글 작성2 - no apiKey")
+    void write2() throws Exception {
+
+        String apiKey = "";
+        String title = "새로운 글 제목";
+        String content = "새로운 글 내용";
+
+        ResultActions resultActions = writeRequest(apiKey, title, content);
+
+        resultActions
+                .andExpect(status().isUnauthorized())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("write"))
+                .andExpect(jsonPath("$.code").value("401-1"))
+                .andExpect(jsonPath("$.msg").value("잘못된 인증키입니다."));
     }
 
 }

@@ -295,7 +295,7 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().handlerType(ApiV1MemberController.class))
                 .andExpect(handler().methodName("me"))
                 .andExpect(jsonPath("$.code").value("401-1"))
-                .andExpect(jsonPath("$.msg").value("잘못횐 인증키입니다."));
+                .andExpect(jsonPath("$.msg").value("잘못된 인증키입니다."));
     }
 
 }
