@@ -19,11 +19,18 @@ public class ApiV1MemberController {
     private final Rq rq;
     private final MemberService memberService;
 
-    record JoinReqBody(String username, String password, String nickname) {};
+    record JoinReqBody(
+            @NotBlank
+            String username,
+            @NotBlank
+            String password,
+            @NotBlank
+            String nickname) {};
 
     @PostMapping("/join")
     public RsData<MemberDto> join(
             @RequestBody
+            @Valid
             JoinReqBody reqBody
     ) {
 

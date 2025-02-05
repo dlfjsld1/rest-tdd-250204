@@ -46,25 +46,36 @@ public class ApiV1MemberControllerTest {
                 .andExpect(jsonPath("$.data.modifiedDate").value(matchesPattern(member.getModifiedDate().toString().replaceAll("0+$", "") + ".*")));
     }
 
-    @Test
-    @DisplayName("회원 가입")
-    void join() throws Exception {
-        ResultActions resultActions = mvc
+    private ResultActions joinRequest(String username, String password, String nickname) throws Exception {
+        return mvc
                 .perform(
                         post("/api/v1/members/join")
                                 .content("""
 								{
-									"username": "usernew",
-									"password": "1234",
-									"nickname": "무명"
+									"username": "%s",
+									"password": "%S",
+									"nickname": "%S"
 								}
-								""".stripIndent())
+								"""
+                                        .formatted(username, password, nickname)
+                                        .stripIndent())
                                 .contentType(
                                         new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)
                                 )
 
                 )
                 .andDo(print());
+
+    }
+
+    @Test
+    @DisplayName("회원 가입")
+    void join() throws Exception {
+        String username = "usernew";
+        String password = "1234";
+        String nickname = "무명";
+
+        ResultActions resultActions = joinRequest(username, password, nickname);
 
         Member member = memberService.findByUsername("usernew").get();
 
@@ -86,22 +97,12 @@ public class ApiV1MemberControllerTest {
     @Test
     @DisplayName("회원 가입2 - username이 이미 존재하는 케이스")
     void join2() throws Exception {
-        ResultActions resultActions = mvc
-                .perform(
-                        post("/api/v1/members/join")
-                                .content("""
-								{
-									"username": "user1",
-									"password": "1234",
-									"nickname": "무명"
-								}
-								""".stripIndent())
-                                .contentType(
-                                        new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)
-                                )
 
-                )
-                .andDo(print());
+        String username = "user1";
+        String password = "1234";
+        String nickname = "무명";
+
+        ResultActions resultActions = joinRequest(username, password, nickname);
 
         resultActions
                 .andExpect(status().isConflict())
@@ -109,6 +110,28 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().methodName("join"))
                 .andExpect(jsonPath("$.code").value("409-1"))
                 .andExpect(jsonPath("$.msg").value("이미 사용중인 아이디입니다."));
+    }
+
+    @Test
+    @DisplayName("회원 가입3 - 입력 데이터 누락")
+    void join3() throws Exception {
+
+        String username = "";
+        String password = "";
+        String nickname = "";
+
+        ResultActions resultActions = joinRequest(username, password, nickname);
+
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("join"))
+                .andExpect(jsonPath("$.code").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("""
+                        nickname : NotBlank : must not be blank
+                        password : NotBlank : must not be blank
+                        username : NotBlank : must not be blank
+                        """.trim().stripIndent()));
     }
 
     private ResultActions loginRequest(String username, String password) throws Exception {
