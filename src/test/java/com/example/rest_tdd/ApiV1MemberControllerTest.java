@@ -15,12 +15,14 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,6 +36,15 @@ public class ApiV1MemberControllerTest {
     @Autowired
     private MemberService memberService;
 
+
+    private void checkMember(ResultActions resultActions, Member member) throws Exception {
+        resultActions
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.id").value(member.getId()))
+                .andExpect(jsonPath("$.data.nickname").value(member.getNickname()))
+                .andExpect(jsonPath("$.data.createdDate").value(matchesPattern(member.getCreatedDate().toString().replaceAll("0+$", "") + ".*")))
+                .andExpect(jsonPath("$.data.modifiedDate").value(matchesPattern(member.getModifiedDate().toString().replaceAll("0+$", "") + ".*")));
+    }
 
     @Test
     @DisplayName("회원 가입")
@@ -65,12 +76,9 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().methodName("join"))
                 //jsonPath = 결과 body에 json 데이터가 있으면 값은~
                 .andExpect(jsonPath("$.code").value("201-1"))
-                .andExpect(jsonPath("$.msg").value("회원 가입이 완료되었습니다."))
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.id").isNumber())
-                .andExpect(jsonPath("$.data.nickname").value("무명"))
-                .andExpect(jsonPath("$.data.createdDate").exists())
-                .andExpect(jsonPath("$.data.modifiedDate").exists());
+                .andExpect(jsonPath("$.msg").value("회원 가입이 완료되었습니다."));
+
+        checkMember(resultActions, member);
 
         ;
     }
@@ -142,8 +150,8 @@ public class ApiV1MemberControllerTest {
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.item.id").isNumber())
                 .andExpect(jsonPath("$.data.item.nickname").value(member.getNickname()))
-                .andExpect(jsonPath("$.data.item.createdDate").value(member.getCreatedDate().toString()))
-                .andExpect(jsonPath("$.data.item.modifiedDate").value(member.getModifiedDate().toString()))
+                .andExpect(jsonPath("$.data.item.createdDate").value(matchesPattern(member.getCreatedDate().toString().replaceAll("0+$", "") + ".*")))
+                .andExpect(jsonPath("$.data.item.modifiedDate").value(matchesPattern(member.getModifiedDate().toString().replaceAll("0+$", "") + ".*")))
                 .andExpect(jsonPath("$.data.apiKey").value(member.getApiKey()));
 
     }
@@ -163,9 +171,72 @@ public class ApiV1MemberControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(handler().handlerType(ApiV1MemberController.class))
                 .andExpect(handler().methodName("login"))
-                .andExpect(jsonPath("$.code").value("401-1"))
+                .andExpect(jsonPath("$.code").value("401-2"))
                 .andExpect(jsonPath("$.msg").value("비밀번호가 일치하지 않습니다."));
 
 
     }
+
+
+    @Test
+    @DisplayName("로그인 - 실패 - 존재하지 않는 username")
+    void login3() throws Exception {
+        String username = "";
+        String password = "1234";
+
+
+        ResultActions resultActions = loginRequest(username, password);
+
+        resultActions
+                .andExpect(status().isUnauthorized())
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("login"))
+                .andExpect(jsonPath("$.code").value("401-1"))
+                .andExpect(jsonPath("$.msg").value("잘못된 아이디입니다."));
+    }
+
+
+    private ResultActions meRequest(String apiKey) throws Exception {
+        return mvc
+                .perform(
+                        get("/api/v1/members/me")
+                                .header("Authorization", "Bearer " + apiKey)
+                )
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("내 정보 조회")
+    void me1() throws Exception {
+        String apiKey = "user1";
+
+        ResultActions resultActions = meRequest(apiKey);
+
+        Member member = memberService.findByApiKey(apiKey).get();
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("me"))
+                .andExpect(jsonPath("$.code").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("내 정보 조회가 완료되었습니다."));
+
+        checkMember(resultActions, member);
+    }
+
+    @Test
+    @DisplayName("내 정보 조회 - 실패 - 잘못된 api key")
+    void me2() throws Exception {
+        String apiKey = UUID.randomUUID().toString();
+
+        ResultActions resultActions = meRequest(apiKey);
+
+        resultActions
+                .andExpect(status().isUnauthorized())
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("me"))
+                .andExpect(jsonPath("$.code").value("401-1"))
+                .andExpect(jsonPath("$.msg").value("잘못횐 인증키입니다."));
+    }
+
 }
