@@ -1,15 +1,14 @@
 package com.example.rest_tdd.domain.post.post.controller;
 
+import com.example.rest_tdd.domain.member.member.entity.Member;
 import com.example.rest_tdd.domain.post.post.dto.PostDto;
 import com.example.rest_tdd.domain.post.post.entity.Post;
 import com.example.rest_tdd.domain.post.post.service.PostService;
+import com.example.rest_tdd.global.Rq;
 import com.example.rest_tdd.global.dto.RsData;
 import com.example.rest_tdd.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiV1PostController {
 
     private final PostService postService;
+    private final Rq rq;
 
     @GetMapping("{id}")
     public RsData<PostDto> getItem(
@@ -31,6 +31,24 @@ public class ApiV1PostController {
         return new RsData<>(
                 "200-1",
                 "%d번 글을 조회하였습니다.".formatted(id),
+                new PostDto(post)
+        );
+    }
+
+
+    record WriteReqBody(String title, String content) {};
+
+    @PostMapping
+    public RsData<PostDto> write(
+            @RequestBody
+            WriteReqBody reqBody
+    ) {
+        Member actor = rq.getAuthenticatedActor();
+        Post post =  postService.write(actor, reqBody.title(), reqBody.content());
+
+        return new RsData<>(
+                "201-1",
+                "%d번 글 작성이 완료되었습니다.".formatted(post.getId()),
                 new PostDto(post)
         );
     }
