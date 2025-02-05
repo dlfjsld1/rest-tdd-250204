@@ -6,6 +6,8 @@ import com.example.rest_tdd.domain.member.member.service.MemberService;
 import com.example.rest_tdd.global.Rq;
 import com.example.rest_tdd.global.dto.RsData;
 import com.example.rest_tdd.global.exception.ServiceException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +40,20 @@ public class ApiV1MemberController {
         );
     }
 
-    record LoginReqBody(String username, String password) {}
+    record LoginReqBody(
+            @NotBlank
+            String username,
+            @NotBlank
+            String password
+    ) {}
 
     record LoginResBody(MemberDto item, String apiKey) {}
     @PostMapping("/login")
-    public RsData<LoginResBody> login(@RequestBody LoginReqBody reqBody) {
+    public RsData<LoginResBody> login(
+            @RequestBody
+            @Valid
+            LoginReqBody reqBody
+    ) {
 
         Member member = memberService.findByUsername(reqBody.username()).orElseThrow(() ->
                 new ServiceException("401-1", "잘못된 아이디입니다.")
