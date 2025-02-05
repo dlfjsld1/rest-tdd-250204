@@ -8,13 +8,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,17 +46,22 @@ public class ApiV1PostControllerTest {
                 .andExpect(jsonPath("$.data.modifiedDate").value(matchesPattern(post.getModifiedDate().toString().replaceAll("0+$", "") + ".*")));
     }
 
-
-    @Test
-    @DisplayName("글 단건 조회")
-    void item() throws Exception {
-
-        long postId = 1;
-        ResultActions resultActions = mvc
+    private ResultActions itemRequest (long postId) throws Exception {
+        return mvc
                 .perform(
                         get("/api/v1/posts/%d".formatted(postId))
                 )
                 .andDo(print());
+
+    }
+
+
+    @Test
+    @DisplayName("글 단건 조회")
+    void item1() throws Exception {
+
+        long postId = 1;
+        ResultActions resultActions = itemRequest(postId);
 
         resultActions
                 .andExpect(status().isOk())
@@ -62,8 +71,61 @@ public class ApiV1PostControllerTest {
                 .andExpect(jsonPath("$.msg").value("%d번 글을 조회하였습니다.".formatted(postId)));
         Post post = postService.getItem(postId).get();
         checkPost(resultActions, post);
-
     }
 
+    @Test
+    @DisplayName("글 단건 조회 - 없는 글 조회")
+    void item2() throws Exception {
+
+        long postId = 100000;
+        ResultActions resultActions = itemRequest(postId);
+
+        resultActions
+                .andExpect(status().isNotFound())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(jsonPath("$.code").value("404-1"))
+                .andExpect(jsonPath("$.msg").value("존재하지 않는 글입니다."));
+    }
+
+    private ResultActions writeRequest(String title, String content) throws Exception {
+        return mvc
+                .perform(
+                        post("/api/v1/posts")
+                            .content("""
+                                {
+                                    "title": "%s",
+                                    "content": "%S",
+                                }
+                            """
+                            .formatted(title, content)
+                            .stripIndent())
+                            .contentType(
+                                new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)
+                            )
+                )
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("글 작성")
+    void item3() throws Exception {
+
+        String title = "새로운 글 제목";
+        String content = "새로운 글 내용";
+
+        ResultActions resultActions = writeRequest(title, content);
+
+        Post post = postService.getLatestItem().get();
+
+        resultActions
+                .andExpect(status().isCreated())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("write"))
+                .andExpect(jsonPath("$.code").value("201-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 글 작성이 완료되었습니다.".formatted(post.getId())));
+
+        checkPost(resultActions, post);
+    }
 
 }

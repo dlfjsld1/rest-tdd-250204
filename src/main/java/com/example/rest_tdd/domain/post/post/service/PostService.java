@@ -53,4 +53,8 @@ public class PostService {
     public void flush() {
         postRepository.flush();
     }
+
+    public Optional<Post> getLatestItem() {
+        return postRepository.findTopByOrderByIdDesc();
+    }
 }
