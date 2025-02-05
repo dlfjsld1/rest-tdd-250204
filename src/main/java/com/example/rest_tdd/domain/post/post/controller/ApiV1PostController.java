@@ -26,9 +26,13 @@ public class ApiV1PostController {
             @PathVariable
             long id
     ) {
+        Member actor = rq.getAuthenticatedActor();
+
         Post post = postService.getItem(id).orElseThrow(
                 () -> new ServiceException("404-1", "존재하지 않는 글입니다.")
         );
+
+        post.canRead(actor);
 
         return new RsData<>(
                 "200-1",
@@ -42,7 +46,8 @@ public class ApiV1PostController {
             @NotBlank
             String title,
             @NotBlank
-            String content
+            String content,
+            boolean published
     ) {}
 
     @PostMapping
@@ -52,7 +57,7 @@ public class ApiV1PostController {
             WriteReqBody reqBody
     ) {
         Member actor = rq.getAuthenticatedActor();
-        Post post =  postService.write(actor, reqBody.title(), reqBody.content());
+        Post post =  postService.write(actor, reqBody.title(), reqBody.content(), reqBody.published());
 
         return new RsData<>(
                 "201-1",

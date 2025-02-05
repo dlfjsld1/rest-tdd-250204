@@ -22,6 +22,7 @@ public class Post extends BaseTime {
     private Member author;
     private String title;
     private String content;
+    private boolean published;
 
     @OneToMany(mappedBy = "post", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     @Builder.Default
@@ -75,5 +76,13 @@ public class Post extends BaseTime {
 
         throw new ServiceException("403-1", "자신이 작성한 글만 삭제 가능합니다.");
 
+    }
+
+    public void canRead(Member actor) {
+        if(this.published) return;
+        if(actor.equals(this.author)) return;
+        if(actor.isAdmin()) return;
+
+        throw new ServiceException("403-1", "비공개 설정된 글입니다.");
     }
 }
