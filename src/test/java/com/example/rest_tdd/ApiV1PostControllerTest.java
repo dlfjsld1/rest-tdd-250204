@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -268,6 +269,64 @@ public class ApiV1PostControllerTest {
                 .andExpect(handler().methodName("modify"))
                 .andExpect(jsonPath("$.code").value("403-1"))
                 .andExpect(jsonPath("$.msg").value("자신이 작성한 글만 수정 가능합니다."));
+    }
+
+
+    private ResultActions deleteRequest(long postId, String apiKey) throws Exception {
+        return mvc
+                .perform(
+                        delete("/api/v1/posts/%d".formatted(postId))
+                                .header("Authorization", "Bearer " + apiKey)
+                )
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("글 삭제")
+    void delete1() throws Exception {
+        long postId = 1;
+        String apiKey = "user1";
+
+        ResultActions resultActions = deleteRequest(postId, apiKey);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(jsonPath("$.code").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 글 삭제가 완료되었습니다.".formatted(postId)));
+
+    }
+
+    @Test
+    @DisplayName("글 삭제2 - no apiKey")
+    void delete2() throws Exception {
+        long postId = 1;
+        String apiKey = "sdfsdfsd";
+        ResultActions resultActions = deleteRequest(postId, apiKey);
+        resultActions
+                .andExpect(status().isUnauthorized())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(jsonPath("$.code").value("401-1"))
+                .andExpect(jsonPath("$.msg").value("잘못된 인증키입니다.".formatted(postId)));
+    }
+
+    @Test
+    @DisplayName("글 삭제 3 - no permission")
+    void delete3() throws Exception {
+        long postId = 1;
+        String apiKey = "user2";
+
+        ResultActions resultActions = deleteRequest(postId, apiKey);
+
+        resultActions
+                .andExpect(status().isForbidden())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(jsonPath("$.code").value("403-1"))
+                .andExpect(jsonPath("$.msg").value("자신이 작성한 글만 삭제 가능합니다."));
+
     }
 
 }
