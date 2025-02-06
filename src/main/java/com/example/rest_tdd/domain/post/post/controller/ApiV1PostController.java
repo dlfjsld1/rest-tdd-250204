@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -24,6 +25,7 @@ public class ApiV1PostController {
     private final Rq rq;
 
     @GetMapping
+    @Transactional
     public RsData<PageDto> getItems(
             @RequestParam(defaultValue = "1")
             int page,
