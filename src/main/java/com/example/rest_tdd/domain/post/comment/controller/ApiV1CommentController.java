@@ -24,6 +24,7 @@ public class ApiV1CommentController {
     private final Rq rq;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<CommentDto> getItems(@PathVariable long postId) {
         Post post = postService.getItem(postId).orElseThrow(() ->
                 new ServiceException("404-1", "존재하지 않는 게시글입니다."
@@ -35,16 +36,17 @@ public class ApiV1CommentController {
                 .toList();
     }
 
-    @GetMapping("{commentId}")
+    @GetMapping("{id}")
+    @Transactional(readOnly = true)
     public CommentDto getItem(
             @PathVariable long postId,
-            @PathVariable long commentId
+            @PathVariable long id
     ) {
         Post post = postService.getItem(postId).orElseThrow(() ->
                 new ServiceException("404-1", "존재하지 않는 게시글입니다."
                 )
         );
-        Comment comment = post.getCommentById(commentId);
+        Comment comment = post.getCommentById(id);
         return new CommentDto(comment);
 
     }
