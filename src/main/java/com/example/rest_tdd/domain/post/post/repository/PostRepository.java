@@ -1,5 +1,6 @@
 package com.example.rest_tdd.domain.post.post.repository;
 
+import com.example.rest_tdd.domain.member.member.entity.Member;
 import com.example.rest_tdd.domain.post.post.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,4 +13,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findByListed(boolean listed, PageRequest p);
     Page<Post> findByListedAndTitleLike(boolean b, String k, PageRequest p);
     Page<Post> findByListedAndContentLike(boolean b, String k, PageRequest p);
+
+    Page<Post> findByAuthorAndTitleLike(Member author, String likeKeyword, PageRequest pageRequest);
+    Page<Post> findByAuthorAndContentLike(Member author, String likeKeyword, PageRequest pageRequest);
 }

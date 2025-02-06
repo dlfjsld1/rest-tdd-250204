@@ -31,7 +31,7 @@ public class ApiV1PostController {
             int pageSize,
             @RequestParam(defaultValue = "title")
             String keywordType,
-            @RequestParam(defaultValue = "title")
+            @RequestParam(defaultValue = "")
             String keyword
     ) {
         Page<Post> postPage = postService.getListedItems(page, pageSize, keywordType, keyword);
@@ -40,6 +40,27 @@ public class ApiV1PostController {
                 "200-1",
                 "글 목록 조회가 완료되었습니다.",
                 new PageDto(postPage)
+        );
+    }
+
+    @GetMapping("/mine")
+    public RsData<PageDto> getMines(
+            @RequestParam(defaultValue = "1")
+            int page,
+            @RequestParam(defaultValue = "3")
+            int pageSize,
+            @RequestParam(defaultValue = "title")
+            String keywordType,
+            @RequestParam(defaultValue = "")
+            String keyword
+    ) {
+
+        Member actor = rq.getAuthenticatedActor();
+        Page<Post> pagePost = postService.getMines(actor, page, pageSize, keywordType, keyword);
+
+        return new RsData<>("200-1",
+                "내 글 목록 조회가 완료되었습니다.",
+                new PageDto(pagePost)
         );
     }
 
@@ -131,6 +152,7 @@ public class ApiV1PostController {
                 "%d번 글 삭제가 완료되었습니다.".formatted(id)
         );
     }
+
 }
 
 
