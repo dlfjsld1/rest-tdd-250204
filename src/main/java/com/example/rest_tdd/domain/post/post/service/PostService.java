@@ -71,7 +71,7 @@ public class PostService {
     public Page<Post> getListedItems(int page, int pageSize) {
 
         //페이징 처리
-        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        PageRequest pageRequest = PageRequest.of(page - 1, pageSize);
 
         return postRepository.findByListed(true, pageRequest);
     }
