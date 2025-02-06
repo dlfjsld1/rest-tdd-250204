@@ -66,7 +66,7 @@ public class ApiV1CommentController {
         postService.flush();
 
         return new RsData<>(
-                "200-1",
+                "201-1",
                 "%d번 댓글 작성이 완료되었습니다.".formatted(comment.getId())
         );
     }
@@ -105,7 +105,7 @@ public class ApiV1CommentController {
 
         return new RsData<>(
                 "200-1",
-                "%d번 댓글이 수정되었습니다.".formatted(comment.getId())
+                "%d번 댓글 수정이 완료되었습니다.".formatted(comment.getId())
         );
     }
 
