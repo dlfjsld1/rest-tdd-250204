@@ -4,6 +4,7 @@ import com.example.rest_tdd.domain.member.member.entity.Member;
 import com.example.rest_tdd.domain.post.post.entity.Post;
 import com.example.rest_tdd.domain.post.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,10 +68,10 @@ public class PostService {
         return postRepository.findTopByOrderByIdDesc();
     }
 
-    public List<Post> getListedItems() {
+    public Page<Post> getListedItems(int page, int pageSize) {
 
         //페이징 처리
-        PageRequest pageRequest = PageRequest.of(0, 3);
+        PageRequest pageRequest = PageRequest.of(page, pageSize);
 
         return postRepository.findByListed(true, pageRequest);
     }
