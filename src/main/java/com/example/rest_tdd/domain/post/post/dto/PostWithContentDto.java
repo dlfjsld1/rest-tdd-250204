@@ -6,22 +6,24 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class PostDto {
+public class PostWithContentDto {
 
     private long id;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
     private String title;
+    private String content;
     private boolean published;
     private boolean listed;
     private long authorId;
     private String authorName;
 
-    public PostDto(Post post) {
+    public PostWithContentDto(Post post) {
         this.id = post.getId();
         this.createdDate = post.getCreatedDate();
         this.modifiedDate = post.getModifiedDate();
         this.title = post.getTitle();
+        this.content = post.getContent();
         this.published = post.isPublished();
         this.listed = post.isListed();
         this.authorId = post.getAuthor().getId();

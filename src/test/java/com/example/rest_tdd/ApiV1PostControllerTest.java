@@ -15,12 +15,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,6 +55,43 @@ public class ApiV1PostControllerTest {
                                 .header("Authorization", "Bearer " + apiKey)
                 )
                 .andDo(print());
+
+    }
+
+    @Test
+    @DisplayName("글 다건 조회")
+    void items1() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/posts")
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("getItems"))
+                .andExpect(jsonPath("$.code").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("글 목록 조회가 완료되었습니다."));
+
+        List<Post> posts = postService.getListedItems();
+
+        for(int i = 0; i < posts.size(); i++) {
+            Post post = posts.get(i);
+
+            resultActions
+                    .andExpect(jsonPath("$.data[%d]".formatted(i)).exists())
+                    .andExpect(jsonPath("$.data[%d].id".formatted(i)).value(post.getId()))
+                    .andExpect(jsonPath("$.data[%d].title".formatted(i)).value(post.getTitle()))
+                    .andExpect(jsonPath("$.data[%d].content".formatted(i)).doesNotExist())
+                    .andExpect(jsonPath("$.data[%d].published".formatted(i)).value(post.isPublished()))
+                    .andExpect(jsonPath("$.data[%d].listed".formatted(i)).value(post.isListed()))
+                    .andExpect(jsonPath("$.data[%d].authorId".formatted(i)).value(post.getAuthor().getId()))
+                    .andExpect(jsonPath("$.data[%d].authorName".formatted(i)).value(post.getAuthor().getNickname()))
+                    .andExpect(jsonPath("$.data[%d].createdDate".formatted(i)).value(matchesPattern(post.getCreatedDate().toString().replaceAll("0+$", "") + ".*")))
+                    .andExpect(jsonPath("$.data[%d].modifiedDate".formatted(i)).value(matchesPattern(post.getModifiedDate().toString().replaceAll("0+$", "") + ".*")));
+        }
+
 
     }
 
@@ -206,7 +241,9 @@ public class ApiV1PostControllerTest {
                                 .content("""
                                         {
                                             "title": "%s",
-                                            "content": "%s"
+                                            "content": "%s",
+                                            "published": true,
+                                            "listed": true
                                         }
                                         """
                                         .formatted(title, content)
