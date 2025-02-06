@@ -23,6 +23,7 @@ public class Post extends BaseTime {
     private String title;
     private String content;
     private boolean published;
+    private boolean listed;
 
     @OneToMany(mappedBy = "post", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     @Builder.Default
@@ -79,7 +80,6 @@ public class Post extends BaseTime {
     }
 
     public void canRead(Member actor) {
-        if(this.published) return;
         if(actor.equals(this.author)) return;
         if(actor.isAdmin()) return;
 

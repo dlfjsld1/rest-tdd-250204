@@ -1,7 +1,6 @@
 package com.example.rest_tdd.domain.post.post.dto;
 
 import com.example.rest_tdd.domain.post.post.entity.Post;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -14,6 +13,8 @@ public class PostDto {
     private LocalDateTime modifiedDate;
     private String title;
     private String content;
+    private boolean published;
+    private boolean listed;
     private long authorId;
     private String authorName;
 
@@ -23,6 +24,8 @@ public class PostDto {
         this.modifiedDate = post.getModifiedDate();
         this.title = post.getTitle();
         this.content = post.getContent();
+        this.published = post.isPublished();
+        this.listed = post.isListed();
         this.authorId = post.getAuthor().getId();
         this.authorName = post.getAuthor().getNickname();
     }
